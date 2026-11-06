@@ -1,0 +1,72 @@
+ACTIVIDAD 3. RESOLUCIÓN DE ERRORES
+Alumno: Alexis Jiménez Salas
+
+Escenario: Un sistema debe calcular un descuento del 10% sobre un producto de $1,000,
+pero muestra $1,000 en lugar de $900.
+
+-------------------------------------------------------------------------------
+1. ¿Qué prueba automatizada utilizarías para detectar el error?
+-------------------------------------------------------------------------------
+Una prueba unitaria sobre la función que calcula el descuento. La prueba llama a la
+función con un precio de 1000 y un descuento de 10% y verifica (assert) que el
+resultado sea exactamente 900. Si el sistema regresa 1000, la prueba falla.
+
+Ejemplo (Python con pytest):
+
+    def test_descuento_10_por_ciento():
+        assert calcular_descuento(1000, 10) == 900
+
+Además agregaría casos extra: descuento de 0% (debe dar 1000), 50% (debe dar 500)
+y 100% (debe dar 0), para cubrir los límites.
+
+-------------------------------------------------------------------------------
+2. ¿Qué debería suceder cuando la prueba falla en CI?
+-------------------------------------------------------------------------------
+- El pipeline de CI se detiene y se marca como "fallido" (en rojo).
+- El cambio NO se integra a la rama principal ni se despliega.
+- Se notifica al programador (correo, mensaje o aviso en GitHub/GitLab) con el
+  reporte de la prueba: valor esperado 900, valor obtenido 1000.
+- Si el cambio venía en un Pull Request, este queda bloqueado para hacer merge.
+
+-------------------------------------------------------------------------------
+3. ¿Qué debe hacer el programador para corregirlo?
+-------------------------------------------------------------------------------
+- Revisar el reporte de CI para identificar qué prueba falló y por qué.
+- Reproducir el error localmente ejecutando las pruebas en su computadora.
+- Revisar la función de descuento. Lo más probable es que no se esté restando el
+  descuento o se regrese el precio original. Ejemplo de código con error:
+
+      def calcular_descuento(precio, porcentaje):
+          descuento = precio * porcentaje / 100
+          return precio            # ERROR: no resta el descuento
+
+  Corrección:
+
+      def calcular_descuento(precio, porcentaje):
+          descuento = precio * porcentaje / 100
+          return precio - descuento   # 1000 - 100 = 900
+
+- Hacer commit de la corrección con un mensaje claro
+  (ej. "Corrige cálculo de descuento") y hacer push al repositorio.
+
+-------------------------------------------------------------------------------
+4. ¿Cómo comprobarías que la corrección funciona?
+-------------------------------------------------------------------------------
+- Ejecutando las pruebas localmente antes del push y verificando que pasen.
+- Al hacer push, el CI vuelve a ejecutarse automáticamente; si todas las pruebas
+  pasan, el pipeline queda en verde.
+- Verificando que el sistema muestre $900 para un producto de $1,000 con 10% de
+  descuento, y que las demás pruebas existentes sigan pasando (pruebas de
+  regresión), para confirmar que la corrección no rompió otra funcionalidad.
+
+-------------------------------------------------------------------------------
+5. ¿Qué regla implementarías para evitar que vuelva a ocurrir?
+-------------------------------------------------------------------------------
+- Ningún cambio se puede integrar a la rama principal si el pipeline de CI falla
+  (protección de rama con "status checks" obligatorios).
+- Todo cambio debe pasar por un Pull Request con revisión de código de al menos
+  otro compañero.
+- Toda corrección de un error debe incluir una prueba automatizada que lo
+  reproduzca, para que quede como prueba de regresión permanente.
+- Establecer un porcentaje mínimo de cobertura de pruebas en la lógica de negocio
+  (por ejemplo 80%).
